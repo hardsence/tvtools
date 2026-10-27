@@ -1,0 +1,21 @@
+# Downloaded tools (JDK, Android SDK, adb) - fetched again by the setup steps in README
+toolchain/
+platform-tools/
+
+# Build output
+launcher/.gradle/
+launcher/app/build/
+launcher/build/
+launcher/local.properties
+*.apk
+
+# Personal: TV screenshots (incl. camera views) and dumps of the TV's settings
+shots/
+backup/
+
+# Secrets - copy from launcher/config-examples/
+launcher/app/src/main/res/values/cameras.xml
+launcher/app/src/main/res/values/tmdb.xml
+
+__pycache__/
+*.pyc

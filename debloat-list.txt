@@ -1,0 +1,43 @@
+# Packages disabled with `pm disable-user --user 0` on MiTV-MOEU0 (Xiaomi TV MAX 85, Android 14).
+# Nothing is uninstalled. tools/restore.py re-enables every package listed here.
+# Already disabled before this session (left alone): isdbtuner, iwedia.tvinput, youtube.tvmusic,
+#   atsctuner, xiaomi.floatingframe
+# Re-enabled by firmware at boot: none (checked after the final reboot on 2026-10-21).
+# Re-enabled by firmware on demand: com.netflix.ninja comes back whenever the remote's Netflix
+#   button is pressed (Xiaomi/MediaTek key handler). Left that way on purpose.
+
+# 1 telemetry
+com.miui.tv.analytics
+com.xiaomi.statistic
+
+# 2 content / ad services (PatchWall recommendations)
+com.mitv.tvhome.michannel
+com.mitv.tvhome.oemtab
+com.xm.webcontent
+# com.mitv.tvhome.mitvplus  (re-enabled 2026-10-21 on request: the remote TV+ button opens it)
+
+# 3 background services (cleaner, manual, Xiaomi app auto-updater; firmware updater kept)
+com.xiaomi.mitv.tvmanager
+com.xiaomi.mitv.manualhelp
+com.xiaomi.mitv.updateservice
+com.mitv.upgrader
+
+# 4 preloaded / streaming apps not used
+com.netflix.ninja
+com.netflix.tokenmanager
+com.amazon.amazonvideo.livingroom
+com.google.android.youtube.tv
+com.google.android.videos
+com.xiaomi.mimusic2
+com.mitv.gallery
+com.mitv.videoplayer
+com.xiaomi.mitv.mediaexplorer
+
+# 5 launchers replaced by the new home screen
+com.mitv.tvhome.atv
+com.google.android.apps.tv.launcherx
+com.spocky.projengmenu
+# Google TV setup wizard: its RecoveryActivity grabs Home once the stock launcher is off
+# (shell may not disable just that component). Disabling it deleted the Wi-Fi network saved
+# at first setup; the TV is on Ethernet. Re-add Wi-Fi in Settings if ever needed.
+com.google.android.tungsten.setupwraith

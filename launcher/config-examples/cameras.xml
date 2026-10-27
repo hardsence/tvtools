@@ -1,0 +1,12 @@
+<resources>
+    <!-- Home cameras (Dahua) shown by Inputs > Home cameras. Order = grid order (left to right,
+         top to bottom). The grid uses each camera's sub stream, full screen its main stream. -->
+    <string-array name="camera_hosts" translatable="false">
+        <item>192.168.1.10</item>
+    </string-array>
+    <string name="camera_user" translatable="false">admin</string>
+    <!-- Stored in the app on the TV. -->
+    <string name="camera_password" translatable="false">CHANGE_ME</string>
+    <string name="camera_path_grid" translatable="false">/cam/realmonitor?channel=1&amp;subtype=1</string>
+    <string name="camera_path_full" translatable="false">/cam/realmonitor?channel=1&amp;subtype=0</string>
+</resources>

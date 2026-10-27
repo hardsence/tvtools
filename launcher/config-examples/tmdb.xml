@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Movie Database API key (v3) for the "Trending this week" slider on the home screen.
+     Empty = no slider. themoviedb.org > Settings > API. -->
+<resources>
+    <string name="tmdb_key" translatable="false"></string>
+</resources>

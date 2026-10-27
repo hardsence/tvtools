@@ -1,0 +1,45 @@
+<resources>
+    <!-- Dock, left to right (as many as there are columns; extra ones start the grid).
+         To change the order without rebuilding, push a text file with one package per line to
+         /sdcard/Android/data/com.clean.tvhome/files/order.txt : its first lines (one per column) become the
+         dock and the remaining lines replace grid_first below. -->
+    <string-array name="dock_packages">
+        <item>org.smarttube.beta</item>
+        <item>org.videolan.vlc</item>
+        <item>com.nvidia.geforcenow</item>
+        <item>com.limelight.perf</item>
+        <item>com.disney.disneyplus</item>
+    </string-array>
+
+    <!-- Shown first in the grid, in this order. Every other app follows alphabetically. -->
+    <string-array name="grid_first">
+        <item>pl.cda.tv</item>
+        <item>com.tvp.vodtv.tv</item>
+        <item>pl.tvp.sport.tv</item>
+        <item>com.valvesoftware.steamlink</item>
+    </string-array>
+
+    <!-- Never shown as tiles (Settings has its own pill; replaced launchers). -->
+    <string-array name="hidden_packages">
+        <item>com.android.tv.settings</item>
+        <item>com.spocky.projengmenu</item>
+        <item>com.mitv.tvhome.atv</item>
+        <item>com.google.android.apps.tv.launcherx</item>
+    </string-array>
+
+    <!-- Remote buttons handled by KeyService (Settings > Accessibility > Home remote buttons).
+         Key: an Android key name (KEYCODE_...) or "scan:<linux key code>" for buttons that share
+         a generic keycode. Action: settings | apps | inputs | home | app:<package>.
+         Find codes with: adb logcat -s CleanHomeKeys -->
+    <string-array name="key_actions">
+        <item>KEYCODE_SETTINGS=settings</item>
+        <item>KEYCODE_ALL_APPS=apps</item>
+        <!-- The Xiaomi remote sends gamepad keycodes (BUTTON_3/BUTTON_7) for its app buttons;
+             match those by scancode so real gamepad buttons in games keep working. -->
+        <item>scan:425=app:org.smarttube.beta</item>   <!-- YouTube button -->
+        <item>scan:207=app:com.disney.disneyplus</item> <!-- Prime Video button -->
+    </string-array>
+
+    <!-- Opened by the Live TV entry of the Inputs menu. -->
+    <string name="live_tv_package">com.mitv.livetv</string>
+</resources>
