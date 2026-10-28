@@ -219,8 +219,7 @@ public class SearchActivity extends Activity {
         if (!apps.isEmpty()) addAppRow(apps);
         focusFirstResult();
 
-        int[] pending = {sources.size()};
-        if (sources.isEmpty()) finishStatus(gen);
+        int[] pending = {sources.size() + 1};
         for (SearchSources.Source s : sources) {
             io.execute(() -> {
                 List<SearchSources.Result> r = SearchSources.query(this, s, q, LIMIT, sig);
@@ -232,6 +231,15 @@ public class SearchActivity extends Activity {
                 });
             });
         }
+        io.execute(() -> {
+            List<SearchSources.Result> r = Tmdb.searchDisney(this, q, sig);
+            ui.post(() -> {
+                if (gen != generation) return;
+                if (!r.isEmpty()) addDisneyRow(r);
+                focusFirstResult();
+                if (--pending[0] == 0) finishStatus(gen);
+            });
+        });
     }
 
     private void focusFirstResult() {
@@ -343,6 +351,24 @@ public class SearchActivity extends Activity {
             c.setOnClickListener(v -> open(r.intent));
             strip.addView(c);
             if (!TextUtils.isEmpty(r.image)) loadImage(r.image, holder[0]);
+        }
+    }
+
+    private void addDisneyRow(List<SearchSources.Result> rs) {
+        Drawable icon = null;
+        try {
+            icon = getPackageManager().getApplicationIcon("com.disney.disneyplus");
+        } catch (Exception ignored) {
+        }
+        LinearLayout strip = section(getString(R.string.search_disney_tmdb), icon);
+        for (SearchSources.Result r : rs) {
+            View c = card(r.title, r.subtitle, icon, false);
+            c.setOnClickListener(v -> open(r.intent));
+            strip.addView(c);
+            if (!TextUtils.isEmpty(r.image)) {
+                ImageView holder = (ImageView) ((ViewGroup) ((ViewGroup) c).getChildAt(0)).getChildAt(0);
+                loadImage(r.image, holder);
+            }
         }
     }
 

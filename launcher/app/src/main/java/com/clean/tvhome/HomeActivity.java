@@ -1066,7 +1066,9 @@ public class HomeActivity extends Activity {
                 if (it == null) break;
                 if (it.video != null) start(Tmdb.trailer(this, it), it.title);   // trailers play in SmartTube
                 else start(new Intent(this, SearchActivity.class)
-                        .putExtra(android.app.SearchManager.QUERY, it.title), getString(R.string.search));
+                    .putExtra(android.app.SearchManager.QUERY,
+                        it.searchTitle == null || it.searchTitle.isEmpty() ? it.title : it.searchTitle),
+                    getString(R.string.search));
                 break;
             }
             default:

@@ -25,6 +25,7 @@ if ($Setup) {
 Start-Process "$sdk\emulator\emulator.exe" -ArgumentList "-avd", "MiTV", "-no-boot-anim"
 if (-not $Setup) { return }
 
+& $adb -s $dev wait-for-device
 do { Start-Sleep 5; $booted = (& $adb -s $dev shell getprop sys.boot_completed 2>$null) } until ("$booted".Trim() -eq "1")
 & "$here\install.ps1" -Device $dev -SkipBuild
 # Google's home screen would keep HOME, as on the TV

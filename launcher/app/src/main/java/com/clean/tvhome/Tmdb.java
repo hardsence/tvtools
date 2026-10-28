@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.CancellationSignal;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -24,9 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -53,7 +56,7 @@ final class Tmdb {
     static final class Item {
         long id;
         boolean movie;
-        String title, overview, year, image, video, date;
+        String title, searchTitle, overview, year, image, video, date;
         double rating, popularity;
         File file;
 
@@ -93,6 +96,7 @@ final class Tmdb {
                 it.id = o.getLong("id");
                 it.movie = o.getBoolean("movie");
                 it.title = o.optString("title");
+                it.searchTitle = o.optString("searchTitle", "");
                 it.overview = o.optString("overview");
                 it.year = o.optString("year");
                 it.image = o.optString("image");
@@ -112,7 +116,8 @@ final class Tmdb {
         JSONArray a = new JSONArray();
         for (Item it : items) {
             JSONObject o = new JSONObject();
-            o.put("id", it.id).put("movie", it.movie).put("title", it.title).put("overview", it.overview)
+                o.put("id", it.id).put("movie", it.movie).put("title", it.title).put("searchTitle", it.searchTitle)
+                    .put("overview", it.overview)
                     .put("year", it.year).put("image", it.image).put("date", it.date).put("rating", it.rating);
             if (it.video != null) o.put("video", it.video);
             a.put(o);
@@ -124,7 +129,20 @@ final class Tmdb {
 
     static boolean stale(Context c) {
         File f = new File(dir(c), "updated");
-        return !f.isFile() || System.currentTimeMillis() - f.lastModified() > MAX_AGE_MS;
+        if (!f.isFile() || System.currentTimeMillis() - f.lastModified() > MAX_AGE_MS) return true;
+        for (String list : new String[] {MOVIES, SERIES}) {
+            File cache = new File(dir(c), list + ".json");
+            if (!cache.isFile()) continue;
+            try {
+                JSONArray items = new JSONArray(new String(Files.readAllBytes(cache.toPath()), StandardCharsets.UTF_8));
+                for (int i = 0; i < items.length(); i++) {
+                    if (TextUtils.isEmpty(items.getJSONObject(i).optString("searchTitle"))) return true;
+                }
+            } catch (Exception e) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ---------------------------------------------------------------- refresh
@@ -176,6 +194,65 @@ final class Tmdb {
         return new JSONObject(get(API + path + sep + "api_key=" + key(c) + "&language=" + lang)).optJSONArray("results");
     }
 
+    static List<SearchSources.Result> searchDisney(Context c, String query, CancellationSignal cancel) {
+        List<SearchSources.Result> out = new ArrayList<>();
+        if (!enabled(c)) return out;
+        try {
+            searchDisneyType(c, query, true, cancel, out);
+            searchDisneyType(c, query, false, cancel, out);
+        } catch (Exception e) {
+            if (!cancel.isCanceled()) Log.w(TAG, "Disney search: " + e);
+        }
+        return out;
+    }
+
+    private static void searchDisneyType(Context c, String query, boolean movie, CancellationSignal cancel,
+            List<SearchSources.Result> out) throws Exception {
+        String type = movie ? "movie" : "tv";
+        String path = "search/" + type + "?query=" + Uri.encode(query) + "&page=1";
+        if (movie) path += "&region=PL";
+        JSONArray found = results(c, path, lang(c));
+        for (int i = 0; found != null && i < found.length() && i < 8 && out.size() < 12; i++) {
+            cancel.throwIfCanceled();
+            JSONObject item = found.getJSONObject(i);
+            long id = item.optLong("id");
+            if (id <= 0) continue;
+            JSONObject response = new JSONObject(get(API + type + "/" + id + "/watch/providers?api_key=" + key(c)));
+            JSONObject poland = response.optJSONObject("results") != null
+                    ? response.optJSONObject("results").optJSONObject("PL") : null;
+            if (poland == null) continue;
+            String link = poland.optString("link");
+            if (TextUtils.isEmpty(link)) continue;
+            boolean disney = false;
+            for (String offerType : new String[] {"flatrate", "free", "ads", "rent", "buy"}) {
+                JSONArray offers = poland.optJSONArray(offerType);
+                for (int j = 0; offers != null && j < offers.length(); j++) {
+                    String provider = offers.getJSONObject(j).optString("provider_name");
+                    if (provider.toLowerCase(Locale.ROOT).contains("disney")) {
+                        disney = true;
+                        break;
+                    }
+                }
+                if (disney) break;
+            }
+            if (!disney) continue;
+
+            SearchSources.Result result = new SearchSources.Result();
+            result.title = item.optString(movie ? "title" : "name");
+            String date = item.optString(movie ? "release_date" : "first_air_date");
+            String year = date.length() >= 4 ? date.substring(0, 4) : "";
+            result.subtitle = "Disney+ · " + c.getString(movie ? R.string.search_disney_movie : R.string.search_disney_series)
+                    + (TextUtils.isEmpty(year) ? "" : " · " + year) + " · TMDB";
+            String poster = item.optString("poster_path");
+            if (!TextUtils.isEmpty(poster) && !"null".equals(poster)) result.image = IMG + "w342" + poster;
+                Uri disneySearch = new Uri.Builder().scheme("disneyplus").authority("www.disneyplus.com")
+                    .appendPath("search").appendQueryParameter("q", result.title).build();
+                result.intent = new Intent(Intent.ACTION_VIEW, disneySearch).setPackage("com.disney.disneyplus");
+            result.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            out.add(result);
+        }
+    }
+
     /** Trending today first, then this week's titles that were not in today's list. */
     private static List<Item> hero(Context c) throws Exception {
         String lang = lang(c);
@@ -210,12 +287,21 @@ final class Tmdb {
 
     /** "What's popular" on TMDB, Streaming tab: titles on subscription services in this region. */
     private static List<Item> popular(Context c, boolean movies) throws Exception {
-        JSONArray res = results(c, "discover/" + (movies ? "movie" : "tv")
-                + "?sort_by=popularity.desc&watch_region=" + region(c) + "&with_watch_monetization_types=flatrate", lang(c));
+        String path = "discover/" + (movies ? "movie" : "tv")
+            + "?sort_by=popularity.desc&watch_region=" + region(c) + "&with_watch_monetization_types=flatrate";
+        String language = lang(c);
+        JSONArray res = results(c, path, language);
+        JSONArray english = language.equals("en-US") ? res : results(c, path, "en-US");
+        Map<Long, String> englishTitles = new HashMap<>();
+        for (int i = 0; english != null && i < english.length(); i++) {
+            JSONObject item = english.getJSONObject(i);
+            englishTitles.put(item.optLong("id"), item.optString(movies ? "title" : "name"));
+        }
         List<Item> out = new ArrayList<>();
         for (int i = 0; res != null && i < res.length() && out.size() < ROW_MAX; i++) {
             JSONObject r = res.getJSONObject(i);
             Item it = item(r, movies);
+            it.searchTitle = englishTitles.getOrDefault(it.id, it.title);
             if (image(c, it, r.optString("poster_path"), "w342")) out.add(it);
         }
         return out;
@@ -288,6 +374,7 @@ final class Tmdb {
         it.id = r.optLong("id");
         it.movie = movie;
         it.title = r.optString(movie ? "title" : "name");
+        it.searchTitle = it.title;
         it.overview = r.optString("overview");
         String date = r.optString(movie ? "release_date" : "first_air_date", "");
         it.year = date.length() >= 4 ? date.substring(0, 4) : "";

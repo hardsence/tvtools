@@ -112,6 +112,9 @@
     <string name="search_searching">Szukam…</string>
     <string name="search_none">Nic nie znaleziono</string>
     <string name="search_sources">Przeszukuje %1$d aplikacji z wyszukiwalną treścią</string>
+    <string name="search_disney_tmdb">Disney+ · TMDB</string>
+    <string name="search_disney_movie">Film</string>
+    <string name="search_disney_series">Serial</string>
     <string name="search_cant_open">Nie można otworzyć tego wyniku</string>
     <string name="hero_label">Trendy</string>
     <string name="hero_hint">OK  Szukaj</string>

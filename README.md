@@ -80,6 +80,11 @@ global search makes. On this TV that returns **Stremio** (films and series) and 
 (YouTube videos). VLC and the TCL browser lock their providers to the system-only `GLOBAL_SEARCH`
 permission, so a launcher can't search them.
 
+Search also checks matching films and series against TMDB's watch-provider data for Poland and shows
+titles available on Disney+ in a **Disney+ · TMDB** row. OK opens TMDB's regional provider link for the
+title, which can be handled by the Disney+ app. This uses the same TMDB API key as the trending and
+streaming rows; TMDB is credited in the result subtitle.
+
 ### Trendy and the TMDB rows (The Movie Database)
 
 Behind the home screen runs a slider of trending films and series: **today's** trending first, then
