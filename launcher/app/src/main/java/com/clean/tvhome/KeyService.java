@@ -61,6 +61,10 @@ public class KeyService extends AccessibilityService {
 
     @Override
     protected boolean onKeyEvent(KeyEvent e) {
+        int keyCode = e.getKeyCode();
+        boolean dpad = keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                || keyCode == KeyEvent.KEYCODE_DPAD_LEFT || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT;
+        if (dpad && e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() > 0) return true;
         if (timer != null && timer.onKey(e)) return true;     // usage-timer lock swallows keys
         if (effects != null && effects.onKey(e)) return true; // wakes the screen after "screen off"
         String name = KeyEvent.keyCodeToString(e.getKeyCode());

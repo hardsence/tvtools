@@ -799,15 +799,14 @@ public class HomeActivity extends Activity {
         boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_UP:
-                if (down) move(0, -1);
+                if (down && e.getRepeatCount() == 0) move(0, -1);
                 return true;
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                if (down) move(0, 1);
+                if (down && e.getRepeatCount() == 0) move(0, 1);
                 return true;
             case KeyEvent.KEYCODE_DPAD_LEFT:
             case KeyEvent.KEYCODE_DPAD_RIGHT:
-                // in the forecast one press is one day: auto-repeat would skip days while it redraws
-                if (down && !((zone == Zone.WEATHER || zone == Zone.HERO) && e.getRepeatCount() > 0))
+                if (down && e.getRepeatCount() == 0)
                     move(k == KeyEvent.KEYCODE_DPAD_LEFT ? -1 : 1, 0);
                 return true;
             case KeyEvent.KEYCODE_DPAD_CENTER:
